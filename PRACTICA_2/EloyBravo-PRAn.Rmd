@@ -1,0 +1,231 @@
+---
+title: "EloyBravo-PRAn"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(dplyr)
+library(tidyr) 
+library(corrplot)
+library(factoextra)
+library(FactoMineR)
+Datos<-read_excel("C:/Users/intel/Downloads/2020_Accidentalidad.xlsx")
+```
+
+## Accidentes de tráfico de la Ciudad de Madrid (desde 2019)
+Accidentes de tráfico en la Ciudad de Madrid registrados por Policía Municipal con víctimas y/o daños
+al patrimonio, esta conjunto de datos nos permitira conocer por distritos de la ciudad de Madrid que tipo de accidentes ocurren con más frecuencia y les permitira a las autoridades tomar cartas en el asunto para reducirle el numero de accidentes.  
+
+
+## Valores NA por Variables
+
+
+
+```{r cars}
+ 
+row.has.na <- sapply(Datos[,1:13], function(x) sum(is.na(x)))
+row.has.na
+```
+
+## Eliminando NA  (DISTRITO y TIPO ACCIDENTE )
+
+
+
+```{r include=TRUE}
+datos2<-Datos[!is.na(Datos$`TIPO ACCIDENTE`),]
+datos2<-datos2[!is.na(datos2$DISTRITO),]
+
+row.has.na2 <- sapply(datos2[,1:13], function(x) sum(is.na(x)))
+row.has.na2
+```
+
+Se procedio a limpiar la base de datos debido a que habían registros en blancos para las variables que vamos a utilizar en el proceso PCA en este caso las variables Distrito y Tipo Accidente, se eliminaron los registros vacios para una de las dos variables o ambas. 
+
+
+## Tabla Cruzada Tipo de Acidente vs Distrito
+
+```{r}
+
+Tabla<-datos2 %>% 
+        select(`TIPO ACCIDENTE`, DISTRITO) %>% 
+        table()
+
+Tabla
+
+```
+
+
+
+```{r include=FALSE}
+d<- table(datos2$`TIPO ACCIDENTE`,datos2$DISTRITO)
+pca<-data.frame(matrix(d,13,21))
+
+
+names(pca)=c("ARGANZUELA","BARAJAS","CARABANCHEL","CENTRO","CHAMARTÍN","CHAMBERÍ",
+             "CIUDAD LINEAL","FUENCARRAL-EL PARDO",
+             "HORTALEZA","LATINA","MONCLOA-ARAVACA","MORATALAZ","PUENTE DE VALLECAS",
+             "RETIRO","SALAMANCA","SAN BLAS-CANILLEJAS","TETUÁN",
+             "USERA","VICÁLVARO","VILLA DE VALLECAS",
+             "VILLAVERDE"
+             )
+
+
+
+TIPO <-c("Alcance","Atropello a animal","Atropello a persona",
+         "Caída","Choque contra obstáculo fijo","Colisión frontal",
+         "Colisión fronto-lateral","Colisión lateral","Colisión múltiple",
+         "Despeñamiento","Otro","Solo salida de la vía","Vuelco")
+
+
+pca<-cbind(pca,TIPO)
+names(pca)[22]<-"TIPO ACCIDENTE"
+row.names(pca)=pca[,22]
+
+```
+
+
+## Distribuciones- número de Accidentes por Distritos
+
+```{r include=TRUE}
+
+par(mfrow=c(2,3))
+
+
+hist(pca$ARGANZUELA,freq = FALSE,col = "lightcyan",main = "ARGANZUELA",xlab="",ylab="Densidad")
+lines(density(pca$ARGANZUELA),col="red",lwd=2)
+
+
+hist(pca$BARAJAS,freq = FALSE,col = "lightcyan",main = "BARAJAS",xlab="",ylab="Densidad")
+lines(density(pca$BARAJAS),col="red",lwd=2)
+
+
+hist(pca$CARABANCHEL,freq = FALSE,col = "lightcyan",main = "CARABANCHEL",xlab="",ylab="Densidad")
+lines(density(pca$CARABANCHEL),col="red",lwd=2)
+
+
+hist(pca$CENTRO,freq = FALSE,col = "lightcyan",main = "CENTRO",xlab="",ylab="Densidad")
+lines(density(pca$CENTRO),col="red",lwd=2)
+
+
+
+hist(pca$CHAMARTÍN,freq = FALSE,col = "lightcyan",main = "CHAMARTÍN",xlab="",ylab="Densidad")
+lines(density(pca$CHAMARTÍN),col="red",lwd=2)
+
+hist(pca$CHAMBERÍ,freq = FALSE,col = "lightcyan",main = "CHAMBERÍ",xlab="",ylab="Densidad")
+lines(density(pca$CHAMBERÍ),col="red",lwd=2)
+```
+
+
+
+
+```{r include=TRUE}
+
+par(mfrow=c(2,3))
+hist(pca$`CIUDAD LINEAL`,freq = FALSE,col = "lightcyan",main = "CIUDAD LINEAL",xlab="",ylab="Densidad")
+lines(density(pca$`CIUDAD LINEAL`),col="red",lwd=2)
+
+hist(pca$`FUENCARRAL-EL PARDO`,freq = FALSE,col = "lightcyan",main = "FUENCARRAL-EL PARDO",xlab="",ylab="Densidad")
+lines(density(pca$`FUENCARRAL-EL PARDO`),col="red",lwd=2)
+
+hist(pca$HORTALEZA,freq = FALSE,col = "lightcyan",main = "HORTALEZA",xlab="",ylab="Densidad")
+lines(density(pca$HORTALEZA),col="red",lwd=2)
+
+hist(pca$LATINA,freq = FALSE,col = "lightcyan",main = "LATINA",xlab="",ylab="Densidad")
+lines(density(pca$LATINA),col="red",lwd=2)
+
+hist(pca$`MONCLOA-ARAVACA`,freq = FALSE,col = "lightcyan",main = "MONCLOA-ARAVACA",xlab="",ylab="Densidad")
+lines(density(pca$`MONCLOA-ARAVACA`),col="red",lwd=2)
+
+hist(pca$MORATALAZ,freq = FALSE,col = "lightcyan",main = "MORATALAZ",xlab="",ylab="Densidad")
+lines(density(pca$MORATALAZ),col="red",lwd=2)
+
+```
+
+
+
+```{r include=TRUE}
+par(mfrow=c(2,3))
+hist(pca$`PUENTE DE VALLECAS`,freq = FALSE,col = "lightcyan",main = "PUENTE DE VALLECAS",xlab="",ylab="Densidad")
+lines(density(pca$`PUENTE DE VALLECAS`),col="red",lwd=2)
+
+hist(pca$RETIRO,freq = FALSE,col = "lightcyan",main = "RETIRO",xlab="",ylab="Densidad")
+lines(density(pca$RETIRO),col="red",lwd=2)
+
+hist(pca$SALAMANCA,freq = FALSE,col = "lightcyan",main = "SALAMANCA",xlab="",ylab="Densidad")
+lines(density(pca$SALAMANCA),col="red",lwd=2)
+
+hist(pca$`SAN BLAS-CANILLEJAS`,freq = FALSE,col = "lightcyan",main = "SAN BLAS-CANILLEJAS",xlab="",ylab="Densidad")
+lines(density(pca$`SAN BLAS-CANILLEJAS`,),col="red",lwd=2)
+
+hist(pca$TETUÁN,freq = FALSE,col = "lightcyan",main = "TETUÁN",xlab="",ylab="Densidad")
+lines(density(pca$TETUÁN),col="red",lwd=2)
+
+hist(pca$USERA,freq = FALSE,col = "lightcyan",main = "USERA",xlab="",ylab="Densidad")
+lines(density(pca$USERA),col="red",lwd=2)
+```
+
+
+
+
+```{r include=TRUE}
+par(mfrow=c(1,3))
+hist(pca$VICÁLVARO,freq = FALSE,col = "lightcyan",main = "VICÁLVARO",xlab="",ylab="Densidad")
+lines(density(pca$VICÁLVARO),col="red",lwd=2)
+
+hist(pca$`VILLA DE VALLECAS`,freq = FALSE,col = "lightcyan",main = "VILLA DE VALLECAS",xlab="",ylab="Densidad")
+lines(density(pca$`VILLA DE VALLECAS`),col="red",lwd=2)
+
+
+hist(pca$VILLAVERDE,freq = FALSE,col = "lightcyan",main = "VILLAVERDE",xlab="",ylab="Densidad")
+lines(density(pca$VILLAVERDE),col="red",lwd=2)
+```
+
+## Correlaciones
+
+```{r}
+cor(pca[,1:20])
+```
+
+podemos observar que hay una  correlación de casi uno entre los distritos VILLA DE VALLECAS y SAN BLAS-CANILLEJAS y también entre los distritos MORATALAZ y FUENCARRAL-EL PARDO
+
+
+## Proceso PCA
+
+
+
+## Valores Propios
+```{r}
+#Tomas las componentes principales
+res.pca <- PCA(pca[,1:21],  graph = FALSE)
+#Extraccion de valores propios
+get_eig(res.pca) 
+```
+Con 2 Dimensiones se explica el 95% de la varianza
+
+```{r}
+var <- get_pca_var(res.pca)
+corrplot(var$cos2, is.corr=FALSE) 
+```
+
+
+```{r}
+fviz_pca_var(res.pca, col.var="contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE # Avoid text overlapping
+)
+```
+
+CHAMARTÍN es uno de los Distritos con menos contribución a las dimensiones 1 y 2
+
+```{r}
+# Biplot of individuals and variables
+fviz_pca_biplot(res.pca, repel = TRUE)
+```
+
+* El Distrito Centro tiene un alto número de accidentes de Colisión lateral, alcance y un bajo número de accidente de colisión frontal, caída , despeñamiento entre otros.
+
+* Ciudad Lineal tiene un alto número de accidente de choques contra obstáculos fijo, colisión fronto-lateral y un número bajo de accidentes por caída, Atropello a animal y salida de la vía.
+
+* En la ciudad de Madrid los Accidentes de tráficos que ocurren con más frecuencia son: Alcance,choques contra obstáculos fijo,Colisión lateral,colisión fronto-lateral y los que ocurren con menor frecuencia son: Vuelco, caída, Atropello a animal, Despeñamiento, colisión frontal, Atropello a persona.   
